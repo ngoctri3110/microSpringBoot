@@ -127,6 +127,7 @@ services:
     extends:
       file: common-config.yml
       service: network-deploy-service
+
   gateway:
     image: nginx:latest
     depends_on:
@@ -196,6 +197,7 @@ services:
     extends:
       file: common-config.yml
       service: network-deploy-service
+
   configserver:
     image: "ngoctri3110/configserver:s11"
     container_name: configserver-ms
@@ -203,9 +205,9 @@ services:
       - "8071:8071"
     healthcheck:
       test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 10s
     extends:
       file: common-config.yml
@@ -218,6 +220,9 @@ services:
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
+    depends_on:
+      configserver:
+        condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1"
       interval: 20s
@@ -236,6 +241,11 @@ services:
     container_name: accounts-ms
     ports:
       - "8080:8080"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1"
       interval: 20s
@@ -254,6 +264,11 @@ services:
     container_name: loans-ms
     ports:
       - "8090:8090"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1"
       interval: 20s
@@ -272,6 +287,11 @@ services:
     container_name: cards-ms
     ports:
       - "9000:9000"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1"
       interval: 20s
@@ -280,11 +300,13 @@ services:
       start_period: 10s
     environment:
       SPRING_APPLICATION_NAME: "cards"
+      OTEL_SERVICE_NAME: "cards"
     extends:
       file: common-config.yml
       service: microservice-eureka-config
+
   gatewayserver:
-    image: "eazybytes/gatewayserver:s11"
+    image: "ngoctri3110/gatewayserver:s11"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
