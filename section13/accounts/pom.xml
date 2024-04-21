@@ -81,6 +81,15 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-stream</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.3.0</version>
@@ -112,7 +121,7 @@
 				<version>3.4.2</version>
 				<configuration>
 					<to>
-						<image>ngoctri3110/${project.artifactId}:s12</image>
+						<image>ngoctri3110/${project.artifactId}:s13</image>
 					</to>
 				</configuration>
 			</plugin>

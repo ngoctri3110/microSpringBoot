@@ -2,6 +2,7 @@ package com.nnt.accounts.service.impl;
 
 import com.nnt.accounts.constants.AccountsConstants;
 import com.nnt.accounts.dto.AccountsDto;
+import com.nnt.accounts.dto.AccountsMsgDto;
 import com.nnt.accounts.dto.CustomerDto;
 import com.nnt.accounts.entity.Accounts;
 import com.nnt.accounts.entity.Customer;
@@ -13,9 +14,11 @@ import com.nnt.accounts.repository.AccountsRepository;
 import com.nnt.accounts.repository.CustomerRepository;
 import com.nnt.accounts.service.IAccountsService;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
@@ -23,8 +26,11 @@ import java.util.Random;
 @AllArgsConstructor
 public class AccountsServiceImpl implements IAccountsService {
 
+    private static final Logger log = LoggerFactory.getLogger(AccountsServiceImpl.class);
+
     private AccountsRepository accountsRepository;
     private CustomerRepository customerRepository;
+    private final StreamBridge streamBridge;
 
     /**
      * @param customerDto
@@ -38,9 +44,17 @@ public class AccountsServiceImpl implements IAccountsService {
                     +customerDto.getMobileNumber());
         }
         Customer savedCustomer = customerRepository.save(customer);
-        accountsRepository.save(createNewAccount(savedCustomer));
+        Accounts saveAccount = accountsRepository.save(createNewAccount(savedCustomer));
+        sendCommunication(saveAccount, savedCustomer);
     }
 
+    private void sendCommunication(Accounts account, Customer customer) {
+        var accountsMsgDto = new AccountsMsgDto(account.getAccountNumber(), customer.getName(),
+                customer.getEmail(), customer.getMobileNumber());
+        log.info("Sending Communication request for the details: {}", accountsMsgDto);
+        var result = streamBridge.send("sendCommunication-out-0", accountsMsgDto);
+        log.info("Is the Communication request successfully triggered ? : {}", result);
+    }
 
     /**
      *
